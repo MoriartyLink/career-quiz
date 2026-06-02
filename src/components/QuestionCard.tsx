@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Question, Option } from '../types';
 import type { Language } from '../App';
+import { ArrowLeft } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -8,6 +9,8 @@ interface QuestionCardProps {
   totalSteps: number;
   onAnswer: (option: Option) => void;
   language: Language;
+  onBack?: () => void;
+  canGoBack?: boolean;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -15,7 +18,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   currentStep,
   totalSteps,
   onAnswer,
-  language
+  language,
+  onBack,
+  canGoBack
 }) => {
   const progress = (currentStep / totalSteps) * 100;
 
@@ -23,13 +28,28 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     ? `Question ${currentStep} of ${totalSteps}` 
     : `မေးခွန်း ${totalSteps} တွင် ${currentStep}`;
 
+  const backText = language === 'en' ? 'Back' : 'နောက်သို့';
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden mt-8">
       <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-          {questionText}
-        </span>
-        <div className="w-32 bg-slate-200 rounded-full h-2">
+        <div className="flex items-center space-x-4">
+          {canGoBack && onBack ? (
+            <button 
+              onClick={onBack}
+              className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors text-sm font-medium"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              {backText}
+            </button>
+          ) : (
+            <div className="w-16"></div> /* Placeholder for alignment */
+          )}
+          <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">
+            {questionText}
+          </span>
+        </div>
+        <div className="w-32 bg-slate-200 rounded-full h-2 hidden sm:block">
           <div
             className="bg-indigo-600 h-2 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}

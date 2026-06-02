@@ -18,6 +18,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({ language }) => {
   const roadmaps = language === 'en' ? roadmapsEn : roadmapsMm;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [history, setHistory] = useState<Option[]>([]);
   const [scores, setScores] = useState<Record<RoleId, number>>({
     architect: 0,
     devops: 0,
@@ -34,9 +35,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({ language }) => {
   const handleAnswer = (option: Option) => {
     const newScores = { ...scores };
     Object.entries(option.scores).forEach(([roleId, score]) => {
-      newScores[roleId as RoleId] += score;
+      newScores[roleId as RoleId] += (score || 0);
     });
     setScores(newScores);
+    setHistory([...history, option]);
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -45,8 +47,23 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({ language }) => {
     }
   };
 
+  const handleBack = () => {
+    if (history.length === 0) return;
+    
+    const lastOption = history[history.length - 1];
+    const newScores = { ...scores };
+    Object.entries(lastOption.scores).forEach(([roleId, score]) => {
+      newScores[roleId as RoleId] -= (score || 0);
+    });
+    
+    setScores(newScores);
+    setHistory((prev) => prev.slice(0, -1));
+    setCurrentQuestionIndex((prev) => prev - 1);
+  };
+
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
+    setHistory([]);
     setScores({
       architect: 0,
       devops: 0,
@@ -76,6 +93,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({ language }) => {
           totalSteps={questions.length}
           onAnswer={handleAnswer}
           language={language}
+          onBack={handleBack}
+          canGoBack={currentQuestionIndex > 0}
         />
       </div>
       <LiveInsights scores={scores} totalQuestionsAnswered={currentQuestionIndex} language={language} roadmaps={roadmaps} />

@@ -33,3 +33,11 @@ export interface CareerRoadmap {
   traits: string; // How this fits INTJ/ADHD/Plant
   steps: RoadmapStep[];
 }
+
+export interface ExampleFigure {
+  region: string;
+  name: string;
+  role: string;
+  linkedinUrl: string;
+  similarity: string;
+}

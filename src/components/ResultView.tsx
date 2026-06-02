@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
 import type { CareerRoadmap, RoleId } from '../types';
-import { Download, RefreshCcw, CheckCircle } from 'lucide-react';
+import { Download, RefreshCcw, CheckCircle, ExternalLink, Users } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import type { Language } from '../App';
+import { getExampleFigures } from '../utils/figureGenerator';
 
 interface ResultViewProps {
   scores: Record<RoleId, number>;
@@ -27,8 +28,12 @@ export const ResultView: React.FC<ResultViewProps> = ({ scores, roadmaps, onRest
     recommended: language === 'en' ? 'Recommended Career Path' : 'အကြံပြုထားသော အသက်မွေးဝမ်းကျောင်း လမ်းကြောင်း',
     whyFits: language === 'en' ? 'Why this fits you:' : 'ဒါက သင့်အတွက် ဘာကြောင့် သင့်တော်တာလဲ။',
     actionPlan: language === 'en' ? 'Your Action Plan' : 'သင်၏ လုပ်ဆောင်ချက် အစီအစဉ်',
-    resources: language === 'en' ? 'Recommended Resources' : 'အကြံပြုထားသော အရင်းအမြစ်များ'
+    resources: language === 'en' ? 'Recommended Resources' : 'အကြံပြုထားသော အရင်းအမြစ်များ',
+    figuresTitle: language === 'en' ? 'People Like You (Global & Local)' : 'သင့်ကဲ့သို့သော ပုဂ္ဂိုလ်များ (ကမ္ဘာလုံးဆိုင်ရာနှင့် ဒေသတွင်း)',
+    figuresDesc: language === 'en' ? 'Explore how leaders with similar cognitive profiles are shaping the tech industry across different regions:' : 'အလားတူ သိမြင်မှုဆိုင်ရာ စရိုက်လက္ခဏာရှိသော ခေါင်းဆောင်များသည် ဒေသအသီးသီးရှိ နည်းပညာလုပ်ငန်းကို မည်သို့ပုံဖော်နေသည်ကို လေ့လာကြည့်ပါ -'
   };
+
+  const figures = roadmap ? getExampleFigures(roadmap, language) : [];
 
   const handleDownloadPdf = () => {
     if (!contentRef.current || !roadmap) return;
@@ -91,7 +96,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ scores, roadmaps, onRest
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-8 mb-16">
           <h4 className="text-2xl font-bold text-slate-800 border-b pb-4">
             {texts.actionPlan}
           </h4>
@@ -131,6 +136,43 @@ export const ResultView: React.FC<ResultViewProps> = ({ scores, roadmaps, onRest
             ))}
           </div>
         </div>
+
+        <div className="border-t-2 border-slate-100 pt-12">
+          <div className="mb-8">
+            <h4 className="text-2xl font-bold text-slate-800 flex items-center mb-3">
+              <Users className="w-6 h-6 text-indigo-600 mr-2" />
+              {texts.figuresTitle}
+            </h4>
+            <p className="text-slate-600">{texts.figuresDesc}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {figures.map((figure, idx) => (
+              <div key={idx} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
+                    {figure.region}
+                  </span>
+                  <a 
+                    href={figure.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-indigo-600 transition-colors"
+                    title="Search on LinkedIn"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+                <h5 className="text-lg font-bold text-slate-800 mb-1">{figure.name}</h5>
+                <div className="text-sm font-medium text-slate-500 mb-3">{figure.role}</div>
+                <p className={`text-slate-600 text-sm ${language === 'mm' ? 'leading-relaxed' : 'leading-relaxed'}`}>
+                  {figure.similarity}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
