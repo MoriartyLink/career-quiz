@@ -1,6 +1,7 @@
 import React from 'react';
 import type { RoleId, CareerRoadmap } from '../types';
 import type { Language } from '../App';
+import { GitMerge } from 'lucide-react';
 
 interface LiveInsightsProps {
   scores: Record<RoleId, number>;
@@ -9,25 +10,56 @@ interface LiveInsightsProps {
   roadmaps: CareerRoadmap[];
 }
 
+// Tree branches mapping logic
+const treeBranches = [
+  {
+    id: 'systems',
+    en: 'Systems & Infrastructure',
+    mm: 'စနစ်များနှင့် အခြေခံအဆောက်အအုံ',
+    roles: ['architect', 'devops'] as RoleId[]
+  },
+  {
+    id: 'data',
+    en: 'Data & Intelligence',
+    mm: 'ဒေတာနှင့် ဉာဏ်ရည်တု',
+    roles: ['ai_engineer', 'data_analyst'] as RoleId[]
+  },
+  {
+    id: 'engineering',
+    en: 'Core Engineering',
+    mm: 'အဓိက အင်ဂျင်နီယာပညာ',
+    roles: ['backend', 'software_engineer'] as RoleId[]
+  },
+  {
+    id: 'leadership',
+    en: 'Leadership & Strategy',
+    mm: 'ခေါင်းဆောင်မှုနှင့် မဟာဗျူဟာ',
+    roles: ['tech_lead', 'pm'] as RoleId[]
+  },
+  {
+    id: 'specialized',
+    en: 'Specialized Fields',
+    mm: 'အထူးပြုနယ်ပယ်',
+    roles: ['other'] as RoleId[]
+  }
+];
+
 export const LiveInsights: React.FC<LiveInsightsProps> = ({ scores, totalQuestionsAnswered, language, roadmaps }) => {
   const texts = {
-    titlePlaceholder: language === 'en' ? 'Live Career Insights' : 'တိုက်ရိုက် အသက်မွေးဝမ်းကျောင်း ထိုးထွင်းသိမြင်မှုများ',
+    titlePlaceholder: language === 'en' ? 'Live Career Tree' : 'တိုက်ရိုက် အသက်မွေးဝမ်းကျောင်း သစ်ပင်',
     descPlaceholder: language === 'en' 
-      ? 'Answer a question to see how your choices shape your potential career paths in real-time.'
-      : 'သင့်ရွေးချယ်မှုများသည် သင်၏အသက်မွေးဝမ်းကျောင်းလမ်းကြောင်းများကို အချိန်နှင့်တစ်ပြေးညီ မည်သို့ပုံဖော်ကြောင်း သိရန် မေးခွန်းကို ဖြေဆိုပါ။',
-    titleActive: language === 'en' ? 'Live Analysis' : 'တိုက်ရိုက် ခွဲခြမ်းစိတ်ဖြာမှု',
-    pts: language === 'en' ? 'pts' : 'မှတ်',
-    indicator: language === 'en' 
-      ? `* Leading indicator based on ${totalQuestionsAnswered} answer${totalQuestionsAnswered !== 1 ? 's' : ''}.`
-      : `* အဖြေ ${totalQuestionsAnswered} ခုအပေါ် အခြေခံထားသော ဦးဆောင်ညွှန်ကိန်း။`
+      ? 'Answer a question to watch your career branches grow in real-time based on your cognitive profile.'
+      : 'သင့်ရွေးချယ်မှုများအပေါ်မူတည်၍ အသက်မွေးဝမ်းကျောင်းလမ်းကြောင်းများ အချိန်နှင့်တစ်ပြေးညီ ကြီးထွားလာမှုကို မြင်တွေ့ရန် မေးခွန်းကို ဖြေဆိုပါ။',
+    titleActive: language === 'en' ? 'Live Engine Analysis' : 'တိုက်ရိုက် ခွဲခြမ်းစိတ်ဖြာမှု',
+    pts: language === 'en' ? 'pts' : 'မှတ်'
   };
 
   // Only show insights after the first couple of questions to avoid noise
   if (totalQuestionsAnswered < 1) {
     return (
-      <div className="w-80 hidden lg:block bg-white shadow-xl rounded-2xl p-6 ml-8 h-fit sticky top-8 border border-slate-100">
+      <div className="w-96 hidden lg:block bg-white shadow-xl rounded-2xl p-6 h-fit sticky top-8 border border-slate-100">
         <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center">
-          <span className="w-2 h-2 rounded-full bg-slate-300 mr-2"></span>
+          <GitMerge className="w-4 h-4 mr-2" />
           {texts.titlePlaceholder}
         </h3>
         <p className={`text-slate-500 text-sm ${language === 'mm' ? 'leading-relaxed' : ''}`}>
@@ -37,59 +69,98 @@ export const LiveInsights: React.FC<LiveInsightsProps> = ({ scores, totalQuestio
     );
   }
 
-  // Sort scores descending
-  const sortedScores = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a)
-    .filter(([, score]) => score > 0)
-    .slice(0, 5); // Show top 5
-
-  const highestScore = sortedScores.length > 0 ? sortedScores[0][1] : 1;
+  // Calculate the highest score to scale the progress bars
+  const maxScore = Math.max(...Object.values(scores), 1);
+  
+  // Find top role to highlight it
+  const topRoleEntry = Object.entries(scores).reduce((a, b) => (a[1] > b[1] ? a : b));
+  const topRoleId = topRoleEntry[1] > 0 ? topRoleEntry[0] : null;
 
   return (
-    <div className="w-80 hidden lg:block bg-white shadow-xl rounded-2xl p-6 ml-8 h-fit sticky top-8 border border-indigo-50">
-      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-6 flex items-center">
+    <div className="w-96 hidden lg:block bg-white shadow-xl rounded-2xl p-6 h-fit max-h-[calc(100vh-4rem)] overflow-y-auto sticky top-8 border border-indigo-50 tree-scrollbar">
+      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-6 flex items-center sticky top-0 bg-white z-10 pb-2 border-b border-indigo-50">
         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse mr-2"></span>
         {texts.titleActive}
       </h3>
 
-      <div className="space-y-5">
-        {sortedScores.map(([roleId, score], index) => {
-          const role = roadmaps.find((r) => r.id === roleId);
-          if (!role) return null;
-          
-          // Calculate relative percentage based on the highest current score
-          const percentage = Math.min(100, Math.max(5, (score / highestScore) * 100));
+      <div className="relative pl-2 font-mono text-sm">
+        {/* Root node */}
+        <div className="flex items-center text-slate-800 font-bold mb-4">
+          <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-xs mr-2">ROOT</span>
+          <span>{language === 'en' ? 'Your Profile' : 'သင်၏ ကိုယ်ရေးအချက်အလက်'}</span>
+        </div>
 
-          return (
-            <div key={roleId} className="relative">
-              <div className="flex justify-between items-end mb-1">
-                <span className={`text-sm font-semibold ${index === 0 ? 'text-indigo-900' : 'text-slate-700'}`}>
-                  {role.title.split('/')[0].split('(')[0].trim()}
-                </span>
-                <span className="text-xs font-medium text-slate-400">
-                  {score} {texts.pts}
-                </span>
+        <div className="border-l-2 border-slate-200 ml-3 space-y-6 pb-2">
+          {treeBranches.map((branch, bIndex) => {
+            const isLastBranch = bIndex === treeBranches.length - 1;
+            return (
+              <div key={branch.id} className="relative">
+                {/* Branch line */}
+                <div className="absolute -left-[2px] top-3 w-4 border-b-2 border-slate-200"></div>
+                {/* Hide the vertical line dropping past the last item */}
+                {isLastBranch && (
+                  <div className="absolute -left-[2px] top-3 bottom-0 w-[4px] bg-white -ml-[1px]"></div>
+                )}
+                
+                <h4 className="pl-6 font-semibold text-slate-600 mb-3 pt-0.5">
+                  {language === 'en' ? branch.en : branch.mm}
+                </h4>
+
+                <div className="pl-6 space-y-4">
+                  {branch.roles.map((roleId, rIndex) => {
+                    const role = roadmaps.find((r) => r.id === roleId);
+                    if (!role) return null;
+                    const score = scores[roleId];
+                    const isTop = roleId === topRoleId;
+                    const percentage = Math.max(2, (score / maxScore) * 100);
+                    const isLastRole = rIndex === branch.roles.length - 1;
+
+                    return (
+                      <div key={roleId} className="relative">
+                        {/* Leaf node connecting lines */}
+                        <div className="absolute -left-4 top-3 w-3 border-b-2 border-slate-200"></div>
+                        <div className={`absolute -left-4 top-0 ${isLastRole ? 'h-3' : 'h-full'} border-l-2 border-slate-200`}></div>
+
+                        <div className="pl-2">
+                          <div className="flex justify-between items-end mb-1">
+                            <span className={`text-xs truncate max-w-[140px] ${isTop ? 'font-bold text-indigo-700' : 'font-medium text-slate-500'}`} title={role.title}>
+                              {role.title.split('/')[0].split('(')[0].trim()}
+                            </span>
+                            <span className={`text-[10px] font-bold ${isTop ? 'text-indigo-600' : 'text-slate-400'}`}>
+                              {score} {texts.pts}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-sm h-1.5 overflow-hidden flex">
+                            <div
+                              className={`h-full transition-all duration-700 ease-out ${
+                                isTop ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]' : 'bg-slate-300'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="w-full bg-slate-100 rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full transition-all duration-700 ease-out ${
-                    index === 0 ? 'bg-indigo-500' : 'bg-slate-300'
-                  }`}
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       
-      {sortedScores.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <p className="text-xs text-slate-500 italic">
-            {texts.indicator}
-          </p>
-        </div>
-      )}
+      <style>{`
+        .tree-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .tree-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .tree-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 20px;
+        }
+      `}</style>
     </div>
   );
 };

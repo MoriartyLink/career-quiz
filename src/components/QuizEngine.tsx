@@ -85,7 +85,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({ language }) => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col lg:flex-row items-start justify-center">
+    <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-start justify-center gap-6">
       <div className="flex-grow w-full lg:max-w-2xl">
         <QuestionCard
           question={currentQuestion}
